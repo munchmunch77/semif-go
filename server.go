@@ -44,7 +44,14 @@ type decision struct {
 	Prompt  string
 }
 
+func setCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+}
+
 func writeJSON(w http.ResponseWriter, status int, value any) {
+	setCORS(w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
@@ -55,6 +62,11 @@ func writeError(w http.ResponseWriter, status int, text string) {
 }
 
 func (s *service) evaluate(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		setCORS(w)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "POST required")
 		return
